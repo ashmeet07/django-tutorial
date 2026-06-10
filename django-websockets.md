@@ -120,3 +120,16 @@ It basically works for RabbitMQ which use this protocol to establish Producer/Co
 
 eg. Banking System, Heavy backend pipelines.
 
+
+In Websockets: 
+Django uses asynchronous requests using channels (long-lived websockets connections).
+- Instead of WSGI server like gunicorn, an ASGI application runs on asynchronous server like Daphne || Uvicorn 
+
+# Views vs Consumers(The Code Shift)
+In views you write Views to handle requests but in django websockets you write Consumer. 
+
+- A view lives and dies in miliseconds.
+- A Consumer is live until user close the website like a stateful object. 
+
+# Channels Layers (The Communication Backbone)
+
