@@ -93,3 +93,30 @@ eg. embedded sensors, IoT devices edge devices as well etc.
 
 
 HTTP Long Pooling the legacy bridge
+It act like a fallback type protocol when websockets along with  SSE are blocked by aggressive corporate firewalls. 
+- The client sends HTTPs request to the server and hangs on onto and wait if the server has new data then sends and client process and again this process continous like websockets.
+- Fallback system like socket.io for real-time-libary
+
+It all works on Application Layer : HTTPs -> TCP, WebSockets ->TCP, WebTransport -> UDP(QUIC), WebRTC -> (UDP)
+
+
+Conclusion: 
+If you are building a standard web app, stick to HTTPS (REST/GraphQL) and WebSockets (or SSE).
+
+If you are building for smart hardware or microservices, look into MQTT or gRPC.
+
+If you are pushing the absolute limits of low-latency web performance (and don't mind sacrificing compatibility with older browsers), experiment with WebTransport.
+
+
+
+CoAP (Constrained Application Protocol)
+It basically work on UDP not TCP and mimics the connection of HTTP which basically works on TCP so using micro-controllers using UDP with satellite-linked with compressed header than HTTP.
+
+P2P Overlaid Networks (BitTorrent/IPFS)
+While WebRTC allows p-to-p connection between two browsers, decentralized file sharing networks use custome connections link thousands of nodes simultaneously 
+
+AMQP (Advanced Message Queuing Protocol)
+It basically works for RabbitMQ which use this protocol to establish Producer/Consumer relationship which basically produce and consume the message. 
+
+eg. Banking System, Heavy backend pipelines.
+
