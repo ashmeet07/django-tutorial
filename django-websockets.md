@@ -133,3 +133,149 @@ In views you write Views to handle requests but in django websockets you write C
 
 # Channels Layers (The Communication Backbone)
 
+Browser -> WebSocket -> ASGI Server (Daphne/Uvicorn) -> Routing -> Consumer -> Channel Layer -> Redis -> Channel Layer -> Consumer -> WebSockets -> Browser   
+
+This is the full flow of the WebSockets in django.
+
+## Browser Opens Connection  ( Step 1)
+
+const socket = new WebSocket(
+        url_app_route,
+)
+
+Request : HTTP Upgrade -> WebSocket Connection 
+
+## ASGI Server (Step 2)
+
+Unlike normal django Django -> WSGI 
+
+Websockets required: Django Channels -> ASGI -> Daphne Uvicorn    //ASGI Receives connection 
+
+## Routing ( Step 3 )
+
+websockets_urlpattern = [
+        Path("ws/chat", ChatConsumer.as_asgi())
+]
+
+Flow : ws/chat -> ChatConsumer
+
+## Consumer (Step 4)
+
+It is equivalent of a Django View.
+
+HTTP : url -> view 
+
+Websocket : url -> Consumer 
+
+eg. class ChatConsumer(AsyncWebsocketConsumer)
+
+Handels: connect(), receive(), disconnect()
+
+## Connect ( Step 5)
+
+User joins : 
+        async def connect(self):
+Usually :
+        await self.channel_layer.group_add(...)
+and:
+        await self.accept()
+
+## Channel Name Creation ( Step 6 )
+
+Every connection gets channel_name
+
+Unique address for websockets. 
+
+## Group Creation (Step 7)
+
+eg. 
+        room_name="chat_room"
+join
+        await self.channel_layer.group_add(
+                room_name, 
+                self.channel_name
+        )
+
+chat_room:
+        |
+        |User A
+        |User B
+        |User C
+
+
+## Channel Layer (Step 8)
+
+It is channel layer where it is a "message_bus" it allows consumer A ----- consumer B (Communication)
+
+## Redis (Backbone) (Step 9)
+
+Usually : 
+        CHANNEL_LAYERS= {
+                "default" : {
+                        "BACKEND":
+                                "channels_redis.core.RedisChannelLayer"
+                }
+        }
+
+Architecture:
+        Consumer-> Channel Layer-> Redis -> Channel Layer-> Consumer
+
+Redis Stores: Groups, Channels, Messages   (temporarily)
+
+
+# What happens when user sends a message ?
+
+Browser: 
+        socket.send("Hello")
+
+Consumer receive:
+        async def receive(self, text_data)
+Inside receive:
+        await self.channel_layer.group_send(
+                "chat_room", 
+                {
+                        "type":"chat_message",
+                        "message": "Hello"
+                }
+        )
+
+## Group Sends (Step 10 )
+
+This doesn't directly send to browser.
+
+Instead: group_send() -> Redis. //Redis stores events
+
+## Redis  Fan-Out (Step 11)
+
+It looks like chat_room (User A, User B, User C Redis forward network to all channels)
+
+## Event Handler (Step 12)
+
+Channels Finds: 
+        "type": "chat_message"
+and calls:
+        async def chat_message(self, event) //automatically 
+
+eg. 
+        async def chat_message(self, event)
+
+Recives:
+        {
+                "type":"chat_message", 
+                "message":"Hello"
+        }
+
+## Send (Step 13)
+
+now actually response happen.
+
+await self.send(
+        text_data=json.dump(...)
+)
+
+Flow : Consumer -> send() -> ASGI -> WebSockets -> Browser
+
+
+# Full Backbone Flow
+
+User A -> WebSocket -> Consumer -> group_send() -> Channel Layer -> Redis -> Channel Layer -> chat_message() -> Consumer -> send() -> WebSocket -> User B
