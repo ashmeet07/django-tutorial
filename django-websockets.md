@@ -279,3 +279,99 @@ Flow : Consumer -> send() -> ASGI -> WebSockets -> Browser
 # Full Backbone Flow
 
 User A -> WebSocket -> Consumer -> group_send() -> Channel Layer -> Redis -> Channel Layer -> chat_message() -> Consumer -> send() -> WebSocket -> User B
+
+
+### Why redis   is needed 
+
+without redis  server 1 wont communicate server 2  in distributed  environment it becomes central message broker.
+
+# Production Architecture
+
+Browser -> Load Balancer -> {Daphne1, Daphne2, Daphne3,....} ->Redis   //all instance share message through redis.
+
+# Scope 
+
+It is equivalent django request object  : self.object 
+
+It Contains: [User , Path, Headers, Query Params, Session, Client IP]
+
+eg. 
+        self.scope["user"] //very commonly used.
+
+# Middleware 
+
+HTTP has : Middleware
+
+Channel has : AuthMIddleware, Custom JWT Middleware  eg. JwtAuthMiddleware
+
+# Authentication 
+
+ways to auth websockets. 
+        Session Auth 
+        JWT Auth 
+        Token  Auth 
+        Custom Auth  //Common interview topics 
+
+Sync Vs Async Consumers 
+        WebsocketConsumer vs AsyncWebsocketConsumer
+
+        Need to know 
+                sync_to_async
+                database_sync_to_async
+
+# Database Access
+
+Wrong 
+        await User.objects.all()
+Correct 
+        @database_sync_to_async
+
+
+Channel Layer Methods
+
+group_add()
+group_send()
+group_discard()
+send()
+receive()
+
+# Direct Channel Messaging
+
+Instead of group you can send directly to specific group.
+
+await self.channel_layer.send(
+        channel_name,
+        event
+)   # usefull for notification 
+
+# Presence System
+
+eg.
+Online Users
+Offline Users
+Last Seen 
+ 
+ Implementation concepts:  Redis, Groups, Disconnect Handling    //Asked in real-world interviews
+
+# Scaling 
+
+production architecture : Nginx -> Load Balancer -> Daphne Instances -> Redis       //Need to understand why redis is required when multiple  server exist
+
+# WebSocket Lifecycle 
+
+Handshake, Connect, Authentication, Join Group, Receive  Message, Send Message, Disconnect, Cleanup    //IMP Interview question 
+
+
+# Security 
+
+JWT Validation 
+Origin Validation 
+Rate Limmiting 
+Authentication
+Authorization 
+Message Validation 
+
+
+# Real Time Design Patterns 
+
+Common system built using channels: Chat system etc.
